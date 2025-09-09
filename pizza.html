@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分数披萨可视化</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .pizza-container {
+            margin: 20px auto;
+            display: inline-block;
+        }
+        .pizza {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            position: relative;
+            background: conic-gradient(
+                red 0deg 90deg,  /* 默认：1/4 用红色 */
+                yellow 90deg 360deg  /* 剩余部分：3/4 用黄色 */
+            );
+            border: 5px solid #8B4513;  /* 披萨边框 */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: background 0.5s ease;  /* 平滑过渡 */
+        }
+        .label {
+            margin-top: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+        .explanation {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #666;
+        }
+        .usage {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <h1>学习分数：披萨例子</h1>
+    <p id="description">这个披萨被分成4等份（分母=4），吃掉了1份（分子=1）。吃掉的部分用红色表示，剩余的部分用黄色表示。</p>
+    
+    <div class="pizza-container">
+        <div class="pizza" id="pizza"></div>
+    </div>
+    
+    <div class="label" id="label">🍕 1/4 的披萨已被吃掉</div>
+    <div class="explanation">你可以修改URL参数来改变分数，例如：?numerator=2&denominator=8 表示2/8。</div>
+    
+    <div class="usage">
+        <p>使用方法：将HTML上传到GitHub Pages，然后访问如 <code>https://yourusername.github.io/repo/?numerator=1&denominator=4</code></p>
+        <p>默认值为1/4。如果分子大于分母或无效，将使用默认值。</p>
+    </div>
+    
+    <script>
+        function getUrlParameter(name) {
+            const url = new URL(window.location.href);
+            return parseInt(url.searchParams.get(name)) || null;
+        }
+
+        function updatePizza(numerator, denominator) {
+            if (!numerator || !denominator || numerator > denominator || denominator <= 0 || numerator < 0) {
+                numerator = 1;
+                denominator = 4;
+            }
+
+            const fraction = numerator / denominator;
+            const eatenAngle = fraction * 360;
+            const remainingAngle = 360 - eatenAngle;
+
+            const pizza = document.getElementById('pizza');
+            const description = document.getElementById('description');
+            const label = document.getElementById('label');
+
+            pizza.style.background = `conic-gradient(red 0deg ${eatenAngle}deg, yellow ${eatenAngle}deg 360deg)`;
+
+            description.textContent = `这个披萨被分成${denominator}等份（分母=${denominator}），吃掉了${numerator}份（分子=${numerator}）。吃掉的部分用红色表示，剩余的部分用黄色表示。`;
+            label.textContent = `🍕 ${numerator}/${denominator} 的披萨已被吃掉`;
+
+            // 确保披萨是圆的
+            pizza.style.borderRadius = '50%';
+        }
+
+        // 初始化
+        const num = getUrlParameter('numerator');
+        const den = getUrlParameter('denominator');
+        updatePizza(num, den);
+    </script>
+</body>
+</html>
