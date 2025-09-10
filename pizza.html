@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>分数披萨可视化</title>
+    <title>分數披薩視覺化</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,18 +15,10 @@
             margin: 20px auto;
             display: inline-block;
         }
-        .pizza {
-            width: 300px;
-            height: 300px;
+        #pizza-svg {
             border-radius: 50%;
-            position: relative;
-            background: conic-gradient(
-                red 0deg 90deg,  /* 默认：1/4 用红色 */
-                yellow 90deg 360deg  /* 剩余部分：3/4 用黄色 */
-            );
-            border: 5px solid #8B4513;  /* 披萨边框 */
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transition: background 0.5s ease;  /* 平滑过渡 */
+            border: 5px solid #8B4513;  /* 披薩邊框 */
         }
         .label {
             margin-top: 20px;
@@ -43,22 +35,31 @@
             font-size: 14px;
             color: #888;
         }
+        .question {
+            margin-top: 30px;
+            font-size: 20px;
+            color: #333;
+            font-weight: bold;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
-    <h1>学习分数：披萨例子</h1>
-    <p id="description">这个披萨被分成4等份（分母=4），吃掉了1份（分子=1）。吃掉的部分用红色表示，剩余的部分用黄色表示。</p>
+    <h1>學習分數：披薩例子</h1>
+    <p id="description">這個披薩被分成7等份（分母=7），吃掉了2份（分子=2）。吃掉的部分用紅色表示，剩餘的部分用黃色表示。</p>
     
     <div class="pizza-container">
-        <div class="pizza" id="pizza"></div>
+        <svg width="300" height="300" viewBox="0 0 300 300" id="pizza-svg"></svg>
     </div>
     
-    <div class="label" id="label">🍕 1/4 的披萨已被吃掉</div>
-    <div class="explanation">你可以修改URL参数来改变分数，例如：?numerator=2&denominator=8 表示2/8。</div>
+    <div class="label" id="label">🍕 2/7 的披薩已被吃掉</div>
     
-    <div class="usage">
-        <p>使用方法：将HTML上传到GitHub Pages，然后访问如 <code>https://yourusername.github.io/repo/?numerator=1&denominator=4</code></p>
-        <p>默认值为1/4。如果分子大于分母或无效，将使用默认值。</p>
+    <div class="question" id="question">
+        還剩下多少塊？請用分數表示是幾分之幾。
     </div>
     
     <script>
@@ -69,25 +70,63 @@
 
         function updatePizza(numerator, denominator) {
             if (!numerator || !denominator || numerator > denominator || denominator <= 0 || numerator < 0) {
-                numerator = 1;
-                denominator = 4;
+                numerator = 2;
+                denominator = 7;
             }
 
-            const fraction = numerator / denominator;
-            const eatenAngle = fraction * 360;
-            const remainingAngle = 360 - eatenAngle;
+            const pizzaContainer = document.querySelector('.pizza-container');
+            pizzaContainer.innerHTML = '<svg width="300" height="300" viewBox="0 0 300 300" id="pizza-svg"></svg>';
+            const svg = document.getElementById('pizza-svg');
 
-            const pizza = document.getElementById('pizza');
+            const centerX = 150;
+            const centerY = 150;
+            const radius = 145;  // 稍小以留邊距給邊框
+
+            const sliceAngle = 360 / denominator;
+            let currentAngle = 0;
+
+            // 先添加所有切片（初始全黃色，模擬切完）
+            for (let i = 0; i < denominator; i++) {
+                const color = (i < numerator) ? 'red' : 'yellow';  // 吃掉的前n個變紅色
+
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + sliceAngle;
+                const startRad = (startAngle * Math.PI / 180) - Math.PI / 2;  // 從頂部開始
+                const endRad = (endAngle * Math.PI / 180) - Math.PI / 2;
+
+                const x1 = centerX + radius * Math.cos(startRad);
+                const y1 = centerY + radius * Math.sin(startRad);
+                const x2 = centerX + radius * Math.cos(endRad);
+                const y2 = centerY + radius * Math.sin(endRad);
+
+                const largeArcFlag = (sliceAngle > 180) ? 1 : 0;
+                const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+
+                const sector = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                sector.setAttribute('d', pathData);
+                sector.setAttribute('fill', color);
+                sector.setAttribute('stroke', 'black');
+                sector.setAttribute('stroke-width', '2');
+                svg.appendChild(sector);
+
+                currentAngle += sliceAngle;
+            }
+
+            // 添加外圈邊框
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', centerX);
+            circle.setAttribute('cy', centerY);
+            circle.setAttribute('r', radius + 5);  // 略大於半徑以覆蓋邊框
+            circle.setAttribute('fill', 'none');
+            circle.setAttribute('stroke', '#8B4513');
+            circle.setAttribute('stroke-width', '5');
+            svg.appendChild(circle);
+
             const description = document.getElementById('description');
             const label = document.getElementById('label');
 
-            pizza.style.background = `conic-gradient(red 0deg ${eatenAngle}deg, yellow ${eatenAngle}deg 360deg)`;
-
-            description.textContent = `这个披萨被分成${denominator}等份（分母=${denominator}），吃掉了${numerator}份（分子=${numerator}）。吃掉的部分用红色表示，剩余的部分用黄色表示。`;
-            label.textContent = `🍕 ${numerator}/${denominator} 的披萨已被吃掉`;
-
-            // 确保披萨是圆的
-            pizza.style.borderRadius = '50%';
+            description.textContent = `這個披薩被分成${denominator}等份（分母=${denominator}），吃掉了${numerator}份（分子=${numerator}）。吃掉的部分用紅色表示，剩餘的部分用黃色表示。`;
+            label.textContent = `🍕 ${numerator}/${denominator} 的披薩已被吃掉`;
         }
 
         // 初始化
